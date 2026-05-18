@@ -55,7 +55,7 @@ dotnet ef database update --project TechMove.GLMS.Core --startup-project TechMov
 dotnet run --project TechMove.GLMS.Web
 ```
 
-Open `http://localhost:5xxx` in your browser.
+Open `https://localhost:7xxx` in your browser.
 
 ### Running Tests
 
