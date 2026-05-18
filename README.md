@@ -1,42 +1,42 @@
-\# TechMove GLMS — Core Prototype
+# TechMove GLMS — Core Prototype
 
-
+[![.NET Build and Test](https://github.com/ST10351970/TechMove.GLMS/actions/workflows/dotnet.yml/badge.svg)](https://github.com/ST10351970/TechMove.GLMS/actions/workflows/dotnet.yml)
 
 ASP.NET Core MVC monolith implementing the Global Logistics Management System for TechMove Logistics.
 
 
 
-\*\*Module:\*\* Enterprise Application Development — Part 2
+**Module:** Enterprise Application Development — Part 2
 
-\*\*Stack:\*\* ASP.NET Core MVC, EF Core, SQL Server, xUnit
-
-
-
-\## Projects
+**Stack:** ASP.NET Core MVC, EF Core, SQL Server, xUnit
 
 
 
-\- \*\*TechMove.GLMS.Web\*\* — MVC presentation layer
-
-\- \*\*TechMove.GLMS.Core\*\* — Domain models, services, design patterns, EF Core DbContext
-
-\- \*\*TechMove.GLMS.Tests\*\* — xUnit unit tests
+## Projects
 
 
 
-\## Running locally
+- **TechMove.GLMS.Web** — MVC presentation layer
+
+- **TechMove.GLMS.Core** — Domain models, services, design patterns, EF Core DbContext
+
+- **TechMove.GLMS.Tests** — xUnit unit tests
 
 
 
-1\. Update the connection string in `appsettings.json`
-
-2\. `dotnet ef database update --project TechMove.GLMS.Web`
-
-3\. `dotnet run --project TechMove.GLMS.Web`
+## Running locally
 
 
 
-\## Running tests
+1. Update the connection string in `appsettings.json`
+
+2. `dotnet ef database update --project TechMove.GLMS.Web`
+
+3. `dotnet run --project TechMove.GLMS.Web`
+
+
+
+## Running tests
 
 
 
