@@ -9,6 +9,10 @@
 {
     <div class="alert alert-success">@success</div>
 }
+@if (TempData["Error"] is string error)
+{
+    <div class="alert alert-danger">@error</div>
+}
 
 <p>
     <a asp-action="Create" class="btn btn-primary">Add new client</a>
@@ -32,7 +36,8 @@
                 <td>@c.Region</td>
                 <td>
                     <a asp-action="Details" asp-route-id="@c.Id">Details</a> |
-                    <a asp-action="Edit" asp-route-id="@c.Id">Edit</a>
+                    <a asp-action="Edit" asp-route-id="@c.Id">Edit</a> |
+                    <a asp-action="Delete" asp-route-id="@c.Id" class="text-danger">Delete</a>
                 </td>
             </tr>
         }

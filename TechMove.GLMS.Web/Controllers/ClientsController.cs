@@ -73,4 +73,51 @@ public class ClientsController : Controller
         TempData["Success"] = $"Client '{client.Name}' updated.";
         return RedirectToAction(nameof(Index));
     }
+
+    // GET: /Clients/Delete/5
+    public async Task<IActionResult> Delete(int id)
+    {
+        var client = await _db.Clients
+            .Include(c => c.Contracts)
+            .FirstOrDefaultAsync(c => c.Id == id);
+
+        if (client is null) return NotFound();
+
+        if (client.Contracts.Any())
+        {
+            TempData["Error"] =
+                $"Client '{client.Name}' cannot be deleted because they have " +
+                $"{client.Contracts.Count} contract(s) attached. " +
+                $"Existing contracts and their service requests must be preserved for audit purposes.";
+            return RedirectToAction(nameof(Index));
+        }
+
+        return View(client);
+    }
+
+    // POST: /Clients/Delete/5
+    [HttpPost, ActionName("Delete")]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> DeleteConfirmed(int id)
+    {
+        var client = await _db.Clients
+            .Include(c => c.Contracts)
+            .FirstOrDefaultAsync(c => c.Id == id);
+
+        if (client is null) return NotFound();
+
+        // Defence in depth: re-check on POST in case a contract was added between GET and POST
+        if (client.Contracts.Any())
+        {
+            TempData["Error"] =
+                $"Client '{client.Name}' cannot be deleted because they have contracts attached.";
+            return RedirectToAction(nameof(Index));
+        }
+
+        _db.Clients.Remove(client);
+        await _db.SaveChangesAsync();
+
+        TempData["Success"] = $"Client '{client.Name}' deleted.";
+        return RedirectToAction(nameof(Index));
+    }
 }

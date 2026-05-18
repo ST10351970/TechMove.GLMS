@@ -1,0 +1,31 @@
+﻿@model TechMove.GLMS.Core.Entities.Client
+@{
+    ViewData["Title"] = "Delete Client";
+}
+
+<h1>Delete Client</h1>
+
+<div class="alert alert-warning">
+    <strong>Warning:</strong> This action cannot be undone.
+</div>
+
+<dl class="row">
+    <dt class="col-sm-3">Name</dt>
+    <dd class="col-sm-9">@Model.Name</dd>
+
+    <dt class="col-sm-3">Contact Details</dt>
+    <dd class="col-sm-9">@Model.ContactDetails</dd>
+
+    <dt class="col-sm-3">Region</dt>
+    <dd class="col-sm-9">@Model.Region</dd>
+
+    <dt class="col-sm-3">Contracts</dt>
+    <dd class="col-sm-9">@Model.Contracts.Count (none — safe to delete)</dd>
+</dl>
+
+<form asp-action="Delete" method="post">
+    @Html.AntiForgeryToken()
+    <input type="hidden" asp-for="Id" />
+    <button type="submit" class="btn btn-danger">Confirm delete</button>
+    <a asp-action="Index" class="btn btn-secondary">Cancel</a>
+</form>
