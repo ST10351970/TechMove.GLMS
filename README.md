@@ -1,4 +1,4 @@
-# TechMove GLMS — Core Prototype
+# Global Logistics Management System — Core Prototype
 
 [![.NET Build and Test](https://github.com/ST10351970/TechMove.GLMS/actions/workflows/dotnet.yml/badge.svg)](https://github.com/ST10351970/TechMove.GLMS/actions/workflows/dotnet.yml)
 
