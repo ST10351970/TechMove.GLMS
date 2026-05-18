@@ -2,43 +2,72 @@
 
 [![.NET Build and Test](https://github.com/ST10351970/TechMove.GLMS/actions/workflows/dotnet.yml/badge.svg)](https://github.com/ST10351970/TechMove.GLMS/actions/workflows/dotnet.yml)
 
-ASP.NET Core MVC monolith implementing the Global Logistics Management System for TechMove Logistics.
+ASP.NET Core MVC monolith implementing the Global Logistics Management System (GLMS)
 
+**Module:** Enterprise Application Development — POE Part 2
+**Stack:** ASP.NET Core MVC (.NET 8), Entity Framework Core, SQL Server LocalDB, xUnit + Moq + FluentAssertions
 
+## Project Structure
 
-**Module:** Enterprise Application Development — Part 2
+| Project | Responsibility |
+|---|---|
+| `TechMove.GLMS.Web` | ASP.NET Core MVC presentation layer — Controllers, Razor views, dependency injection wiring |
+| `TechMove.GLMS.Core` | Domain entities, EF Core DbContext (Fluent API), business services, design patterns |
+| `TechMove.GLMS.Tests` | xUnit unit test suite (73 tests) covering business logic, validation, and integration points |
 
-**Stack:** ASP.NET Core MVC, EF Core, SQL Server, xUnit
+## Design Patterns Implemented (from Part 1 UML)
 
+| Pattern | Location | Purpose |
+|---|---|---|
+| **Factory** | `Core/Services/Factories/ContractFactory.cs` | Encapsulates Contract creation with per-service-level defaults (Basic 6 mo, Premium 12 mo, Enterprise 24 mo) |
+| **Strategy** | `Core/Services/Strategies/` | Interchangeable currency-to-ZAR conversion algorithms (USD, EUR, GBP) |
+| **Observer** | `Core/Services/Observers/` | Broadcasts Contract status changes to audit logger and expired-contract guard |
 
+## Key Features
 
-## Projects
+- ✅ Three-tier separation: Web → Core (business logic) → Tests
+- ✅ EF Core Fluent API configuration with normalised schema
+- ✅ Async/await end-to-end with external Currency API integration
+- ✅ Two-tier resilience cache (in-memory + disk fallback) survives app restarts
+- ✅ Status state machine prevents illegal transitions (e.g. Expired → Active)
+- ✅ Observer pattern enforces "no new requests on Expired/OnHold contracts"
+- ✅ PDF-only file uploads with UUID naming and content-type validation
+- ✅ Client-side and server-side validation
+- ✅ 73 unit tests, automated via GitHub Actions on every push
 
+## Running Locally
 
+### Prerequisites
+- .NET 8 SDK
+- SQL Server LocalDB (bundled with Visual Studio)
+- Optional: SQL Server Management Studio for database inspection
 
-- **TechMove.GLMS.Web** — MVC presentation layer
+### Setup
 
-- **TechMove.GLMS.Core** — Domain models, services, design patterns, EF Core DbContext
+```bash
+# Restore packages
+dotnet restore
 
-- **TechMove.GLMS.Tests** — xUnit unit tests
+# Apply migrations (creates TechMoveGLMS database in LocalDB)
+dotnet ef database update --project TechMove.GLMS.Core --startup-project TechMove.GLMS.Web
 
+# Run the web app
+dotnet run --project TechMove.GLMS.Web
+```
 
+Open `http://localhost:5xxx` in your browser.
 
-## Running locally
+### Running Tests
 
+```bash
+dotnet test
+```
 
+## External Dependencies
 
-1. Update the connection string in `appsettings.json`
+- **ExchangeRate-API** (`https://open.er-api.com/`) — open access endpoint, no API key required, attribution provided in source.
 
-2. `dotnet ef database update --project TechMove.GLMS.Web`
+## Submission Information
 
-3. `dotnet run --project TechMove.GLMS.Web`
-
-
-
-## Running tests
-
-
-
-`dotnet test`
-
+- **Student:** Lesego Letsapa
+- **Student Number:** ST10351970
