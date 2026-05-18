@@ -1,0 +1,40 @@
+﻿@model IEnumerable<TechMove.GLMS.Core.Entities.Client>
+@{
+    ViewData["Title"] = "Clients";
+}
+
+<h1>Clients</h1>
+
+@if (TempData["Success"] is string success)
+{
+    <div class="alert alert-success">@success</div>
+}
+
+<p>
+    <a asp-action="Create" class="btn btn-primary">Add new client</a>
+</p>
+
+<table class="table table-striped">
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Contact details</th>
+            <th>Region</th>
+            <th></th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var c in Model)
+        {
+            <tr>
+                <td>@c.Name</td>
+                <td>@c.ContactDetails</td>
+                <td>@c.Region</td>
+                <td>
+                    <a asp-action="Details" asp-route-id="@c.Id">Details</a> |
+                    <a asp-action="Edit" asp-route-id="@c.Id">Edit</a>
+                </td>
+            </tr>
+        }
+    </tbody>
+</table>

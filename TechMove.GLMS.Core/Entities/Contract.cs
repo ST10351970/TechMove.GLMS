@@ -7,14 +7,15 @@ public class Contract
 {
     public int Id { get; set; }
 
-    // Foreign key back to Client
     public int ClientId { get; set; }
     public Client Client { get; set; } = null!;
 
     [Required]
+    [Display(Name = "Start Date")]
     public DateTime StartDate { get; set; }
 
     [Required]
+    [Display(Name = "End Date")]
     public DateTime EndDate { get; set; }
 
     [Required]
@@ -22,6 +23,7 @@ public class Contract
 
     [Required]
     [StringLength(50)]
+    [Display(Name = "Service Level")]
     public string ServiceLevel { get; set; } = string.Empty;
 
     // PDF signed agreement — stored as path on disk

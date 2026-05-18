@@ -1,0 +1,62 @@
+﻿@{
+    ViewData["Title"] = "Add Contract";
+}
+
+<h1>Add Contract</h1>
+
+<form asp-action="Create" method="post" enctype="multipart/form-data">
+    @Html.AntiForgeryToken()
+    <div asp-validation-summary="All" class="text-danger"></div>
+
+    <div class="mb-3">
+        <label class="form-label">Client</label>
+        <select name="clientId" asp-items="@(ViewBag.Clients as SelectList)" class="form-select" required></select>
+    </div>
+
+    <div class="mb-3">
+        <label class="form-label">Service level</label>
+        <select name="serviceLevel" asp-items="@(ViewBag.ServiceLevels as SelectList)" class="form-select" required></select>
+    </div>
+
+    <div class="mb-3">
+        <label class="form-label">Start date</label>
+        <input type="date" name="startDate" class="form-control" required />
+    </div>
+
+    <div class="mb-3">
+        <label class="form-label">Signed agreement (PDF only, max 10 MB)</label>
+        <input type="file" name="signedAgreement" accept="application/pdf,.pdf" class="form-control" required />
+        <small class="form-text text-muted">Only PDF files are accepted.</small>
+    </div>
+
+    <button type="submit" class="btn btn-primary">Create contract</button>
+    <a asp-action="Index" class="btn btn-secondary">Cancel</a>
+</form>
+
+@section Scripts {
+    @{
+        await Html.RenderPartialAsync("_ValidationScriptsPartial");
+    }
+    <script>
+        // client-side PDF guard — paired with server-side FileService rules.
+        document.addEventListener('DOMContentLoaded', function () {
+            const fileInput = document.querySelector('input[name="signedAgreement"]');
+            if (!fileInput) return;
+            fileInput.addEventListener('change', function () {
+                const file = fileInput.files && fileInput.files[0];
+                if (!file) return;
+                const okExt = /\.pdf$/i.test(file.name);
+                const okSize = file.size <= 10 * 1024 * 1024;
+                if (!okExt) {
+                    alert('Only PDF files are allowed.');
+                    fileInput.value = '';
+                    return;
+                }
+                if (!okSize) {
+                    alert('File exceeds 10 MB limit.');
+                    fileInput.value = '';
+                }
+            });
+        });
+    </script>
+}

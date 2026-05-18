@@ -13,12 +13,12 @@ public class Client
 
     [Required]
     [StringLength(200)]
+    [Display(Name = "Contact Details")]
     public string ContactDetails { get; set; } = string.Empty;
 
     [Required]
     [StringLength(100)]
     public string Region { get; set; } = string.Empty;
 
-    // Navigation property — a client can have many contracts
     public ICollection<Contract> Contracts { get; set; } = new List<Contract>();
 }

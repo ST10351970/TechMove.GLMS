@@ -1,0 +1,20 @@
+﻿@model TechMove.GLMS.Core.Entities.Client
+@{
+    ViewData["Title"] = $"Client: {Model.Name}";
+}
+
+<h1>@Model.Name</h1>
+
+<dl class="row">
+    <dt class="col-sm-3">Contact details</dt>
+    <dd class="col-sm-9">@Model.ContactDetails</dd>
+
+    <dt class="col-sm-3">Region</dt>
+    <dd class="col-sm-9">@Model.Region</dd>
+
+    <dt class="col-sm-3">Contracts</dt>
+    <dd class="col-sm-9">@Model.Contracts.Count</dd>
+</dl>
+
+<a asp-action="Edit" asp-route-id="@Model.Id" class="btn btn-primary">Edit</a>
+<a asp-action="Index" class="btn btn-secondary">Back to list</a>

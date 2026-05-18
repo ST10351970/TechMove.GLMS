@@ -29,6 +29,13 @@ builder.Services.AddSingleton<IContractSubject, ContractStatusNotifier>();
 builder.Services.AddScoped<IContractValidator, ContractValidator>();
 builder.Services.AddScoped<IContractStatusService, ContractStatusService>();
 
+// File handling service (PDF uploads, downloads, validation)
+builder.Services.AddScoped<IFileService>(sp =>
+{
+    var env = sp.GetRequiredService<IWebHostEnvironment>();
+    return new FileService(env.WebRootPath);
+});
+
 // Add services to the container.
 builder.Services.AddControllersWithViews();
 

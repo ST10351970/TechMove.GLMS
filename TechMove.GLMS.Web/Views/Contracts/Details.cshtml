@@ -1,0 +1,86 @@
+﻿@model TechMove.GLMS.Core.Entities.Contract
+@using TechMove.GLMS.Core.Enums
+@{
+    ViewData["Title"] = $"Contract #{Model.Id}";
+    var allowedTransitions = ViewBag.AllowedTransitions as IEnumerable<ContractStatus>;
+}
+
+<h1>Contract #@Model.Id</h1>
+
+@if (TempData["Success"] is string success)
+{
+    <div class="alert alert-success">@success</div>
+}
+@if (TempData["Error"] is string error)
+{
+    <div class="alert alert-danger">@error</div>
+}
+
+<dl class="row">
+    <dt class="col-sm-3">Client</dt>
+    <dd class="col-sm-9">@Model.Client.Name</dd>
+    <dt class="col-sm-3">Service level</dt>
+    <dd class="col-sm-9">@Model.ServiceLevel</dd>
+    <dt class="col-sm-3">Start date</dt>
+    <dd class="col-sm-9">@Model.StartDate.ToString("yyyy-MM-dd")</dd>
+    <dt class="col-sm-3">End date</dt>
+    <dd class="col-sm-9">@Model.EndDate.ToString("yyyy-MM-dd")</dd>
+    <dt class="col-sm-3">Status</dt>
+    <dd class="col-sm-9"><span class="badge bg-secondary">@Model.Status</span></dd>
+    <dt class="col-sm-3">Signed agreement</dt>
+    <dd class="col-sm-9">
+        @if (!string.IsNullOrEmpty(Model.SignedAgreementPath))
+        {
+            <a asp-action="DownloadAgreement" asp-route-id="@Model.Id">
+                Download @(Model.SignedAgreementOriginalName ?? "agreement.pdf")
+            </a>
+        }
+        else
+        {
+            <em>No agreement uploaded.</em>
+        }
+    </dd>
+</dl>
+
+@if (allowedTransitions != null && allowedTransitions.Any())
+{
+    <h3>Change status</h3>
+    <form asp-action="ChangeStatus" method="post" class="d-flex gap-2 align-items-center">
+        @Html.AntiForgeryToken()
+        <input type="hidden" name="id" value="@Model.Id" />
+        <select name="newStatus" class="form-select" style="max-width: 250px;">
+            @foreach (var t in allowedTransitions)
+            {
+                <option value="@t">@t</option>
+            }
+        </select>
+        <button type="submit" class="btn btn-warning">Apply</button>
+    </form>
+}
+else
+{
+    <p><em>This contract is in a terminal state; no further status changes are allowed.</em></p>
+}
+
+<hr />
+<h3>Service requests (@Model.ServiceRequests.Count)</h3>
+<a asp-controller="ServiceRequests" asp-action="Create" asp-route-contractId="@Model.Id" class="btn btn-success mb-2">
+    Add service request
+</a>
+
+<table class="table">
+    <thead><tr><th>#</th><th>Description</th><th>Cost (ZAR)</th><th>Status</th></tr></thead>
+    <tbody>
+        @foreach (var sr in Model.ServiceRequests)
+        {
+            <tr>
+                <td>@sr.Id</td>
+                <td>@sr.Description</td>
+                <td>@sr.CostInZAR.ToString("N2")</td>
+                <td>@sr.Status</td>
+            </tr>
+        }
+    </tbody>
+</table>
+
+<a asp-action="Index" class="btn btn-secondary">Back to list</a>

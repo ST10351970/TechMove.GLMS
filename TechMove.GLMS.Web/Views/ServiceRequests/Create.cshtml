@@ -1,0 +1,41 @@
+﻿@{
+    ViewData["Title"] = "Add Service Request";
+    var contractId = (int)ViewBag.ContractId;
+}
+
+<h1>Add Service Request</h1>
+
+<form asp-action="Create" method="post">
+    @Html.AntiForgeryToken()
+    <input type="hidden" name="contractId" value="@contractId" />
+    <div asp-validation-summary="All" class="text-danger"></div>
+
+    <div class="mb-3">
+        <label class="form-label">Description</label>
+        <textarea name="description" class="form-control" rows="3" maxlength="1000" required></textarea>
+    </div>
+
+    <div class="mb-3">
+        <label class="form-label">Cost (source currency)</label>
+        <input type="number" name="costInSourceCurrency" step="0.01" min="0.01" class="form-control" required />
+    </div>
+
+    <div class="mb-3">
+        <label class="form-label">Source currency</label>
+        <select name="sourceCurrency" class="form-select" required>
+            <option value="USD">USD — US Dollar</option>
+            <option value="EUR">EUR — Euro</option>
+            <option value="GBP">GBP — Pound Sterling</option>
+        </select>
+        <small class="form-text text-muted">ZAR conversion happens automatically (Phase 6 wires the external API).</small>
+    </div>
+
+    <button type="submit" class="btn btn-primary">Create request</button>
+    <a asp-controller="Contracts" asp-action="Details" asp-route-id="@contractId" class="btn btn-secondary">Cancel</a>
+</form>
+
+@section Scripts {
+    @{
+        await Html.RenderPartialAsync("_ValidationScriptsPartial");
+    }
+}
