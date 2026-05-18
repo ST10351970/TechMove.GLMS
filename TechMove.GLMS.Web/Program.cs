@@ -3,6 +3,7 @@ using TechMove.GLMS.Core.Data;
 using TechMove.GLMS.Core.Services.Strategies;
 using TechMove.GLMS.Core.Services.Factories;
 using TechMove.GLMS.Core.Services.Observers;
+using TechMove.GLMS.Core.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -23,6 +24,10 @@ builder.Services.AddScoped<IContractFactory, ContractFactory>();
 builder.Services.AddSingleton<IContractObserver, AuditLogObserver>();
 builder.Services.AddSingleton<IContractObserver, ExpiredContractGuardObserver>();
 builder.Services.AddSingleton<IContractSubject, ContractStatusNotifier>();
+
+// Validation and workflow services
+builder.Services.AddScoped<IContractValidator, ContractValidator>();
+builder.Services.AddScoped<IContractStatusService, ContractStatusService>();
 
 // Add services to the container.
 builder.Services.AddControllersWithViews();
