@@ -36,32 +36,57 @@
     </div>
 </form>
 
-<p><a asp-action="Create" class="btn btn-success">Add new contract</a></p>
+<div class="d-flex justify-content-between align-items-center mb-2">
+    <a asp-action="Create" class="btn btn-success">Add new contract</a>
+    <span class="text-muted">@Model.Count() contract@(Model.Count() == 1 ? "" : "s") found</span>
+</div>
 
-<table class="table table-striped">
-    <thead>
-        <tr>
-            <th>#</th>
-            <th>Client</th>
-            <th>Service level</th>
-            <th>Start</th>
-            <th>End</th>
-            <th>Status</th>
-            <th></th>
-        </tr>
-    </thead>
-    <tbody>
-        @foreach (var c in Model)
-        {
+@if (!Model.Any())
+{
+    <div class="alert alert-info">
+        No contracts match the current filter.
+        <a asp-action="Index">Clear the filter</a> to see all contracts.
+    </div>
+}
+else
+{
+    <table class="table table-striped">
+        <thead>
             <tr>
-                <td>@c.Id</td>
-                <td>@c.Client.Name</td>
-                <td>@c.ServiceLevel</td>
-                <td>@c.StartDate.ToString("yyyy-MM-dd")</td>
-                <td>@c.EndDate.ToString("yyyy-MM-dd")</td>
-                <td><span class="badge bg-secondary">@c.Status</span></td>
-                <td><a asp-action="Details" asp-route-id="@c.Id">Details</a></td>
+                <th>#</th>
+                <th>Client</th>
+                <th>Service level</th>
+                <th>Start</th>
+                <th>End</th>
+                <th>Status</th>
+                <th></th>
             </tr>
-        }
-    </tbody>
-</table>
+        </thead>
+        <tbody>
+            @foreach (var c in Model)
+            {
+                <tr>
+                    <td>@c.Id</td>
+                    <td>@c.Client.Name</td>
+                    <td>@c.ServiceLevel</td>
+                    <td>@c.StartDate.ToString("yyyy-MM-dd")</td>
+                    <td>@c.EndDate.ToString("yyyy-MM-dd")</td>
+                    <td>
+                        @{
+                            var badgeClass = c.Status switch
+                            {
+                                ContractStatus.Draft => "bg-secondary",
+                                ContractStatus.Active => "bg-success",
+                                ContractStatus.Expired => "bg-danger",
+                                ContractStatus.OnHold => "bg-warning text-dark",
+                                _ => "bg-secondary"
+                            };
+                        }
+                        <span class="badge @badgeClass">@c.Status</span>
+                    </td>
+                    <td><a asp-action="Details" asp-route-id="@c.Id">Details</a></td>
+                </tr>
+            }
+        </tbody>
+    </table>
+}

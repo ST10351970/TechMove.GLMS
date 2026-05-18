@@ -34,6 +34,12 @@ public class ContractsController : Controller
     // GET: /Contracts  with search/filter
     public async Task<IActionResult> Index(DateTime? startFrom, DateTime? startTo, ContractStatus? status)
     {
+        if (startFrom.HasValue && startTo.HasValue && startFrom.Value > startTo.Value)
+        {
+            TempData["Error"] = "The 'Start from' date must be on or before the 'Start to' date.";
+            startFrom = null;
+            startTo = null;
+        }
         IQueryable<Contract> query = _db.Contracts.Include(c => c.Client);
 
         if (startFrom.HasValue)
@@ -46,7 +52,7 @@ public class ContractsController : Controller
         ViewBag.StartFrom = startFrom?.ToString("yyyy-MM-dd");
         ViewBag.StartTo = startTo?.ToString("yyyy-MM-dd");
         ViewBag.Status = status;
-        ViewBag.StatusList = new SelectList(Enum.GetValues<ContractStatus>());
+        ViewBag.StatusList = new SelectList(Enum.GetValues<ContractStatus>(), status);
 
         var contracts = await query.OrderByDescending(c => c.StartDate).ToListAsync();
         return View(contracts);
