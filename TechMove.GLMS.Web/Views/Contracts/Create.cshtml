@@ -15,12 +15,23 @@
 
     <div class="mb-3">
         <label class="form-label">Service level</label>
-        <select name="serviceLevel" asp-items="@(ViewBag.ServiceLevels as SelectList)" class="form-select" required></select>
+        <select id="serviceLevel" name="serviceLevel" asp-items="@(ViewBag.ServiceLevels as SelectList)" class="form-select" required></select>
+        <small class="form-text text-muted">
+            Contract duration is set automatically: Basic = 6 months, Premium = 12 months, Enterprise = 24 months.
+        </small>
     </div>
 
     <div class="mb-3">
         <label class="form-label">Start date</label>
-        <input type="date" name="startDate" class="form-control" required />
+        <input type="date" id="startDate" name="startDate" class="form-control" required />
+    </div>
+
+    <div class="mb-3">
+        <label class="form-label">End date (auto-calculated)</label>
+        <input type="text" id="endDatePreview" class="form-control" readonly placeholder="Pick a start date and service level" />
+        <small class="form-text text-muted">
+            Calculated from your start date plus the duration determined by the service level.
+        </small>
     </div>
 
     <div class="mb-3">
@@ -58,5 +69,44 @@
                 }
             });
         });
+
+        // End date preview for user feedback.
+        (function () {
+            const startInput = document.getElementById('startDate');
+            const serviceLevelSelect = document.getElementById('serviceLevel');
+            const endPreview = document.getElementById('endDatePreview');
+            if (!startInput || !serviceLevelSelect || !endPreview) return;
+
+            const durationsByLevel = {
+                'Basic': 6,
+                'Premium': 12,
+                'Enterprise': 24
+            };
+
+            function recalcEnd() {
+                const start = startInput.value;
+                const level = serviceLevelSelect.value;
+                if (!start || !level || !(level in durationsByLevel)) {
+                    endPreview.value = '';
+                    return;
+                }
+                const startDate = new Date(start + 'T00:00:00');
+                if (isNaN(startDate.getTime())) {
+                    endPreview.value = '';
+                    return;
+                }
+                const months = durationsByLevel[level];
+                const endDate = new Date(startDate);
+                endDate.setMonth(endDate.getMonth() + months);
+
+                const yyyy = endDate.getFullYear();
+                const mm = String(endDate.getMonth() + 1).padStart(2, '0');
+                const dd = String(endDate.getDate()).padStart(2, '0');
+                endPreview.value = `${yyyy}-${mm}-${dd}`;
+            }
+
+            startInput.addEventListener('change', recalcEnd);
+            serviceLevelSelect.addEventListener('change', recalcEnd);
+        })();
     </script>
 }

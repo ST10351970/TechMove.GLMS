@@ -487,3 +487,6 @@ $RECYCLE.BIN/
 wwwroot/uploads/
 *.user
 appsettings.Development.json
+
+# Runtime fallback data
+App_Data/

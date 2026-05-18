@@ -12,22 +12,35 @@
 
     <div class="mb-3">
         <label class="form-label">Description</label>
-        <textarea name="description" class="form-control" rows="3" maxlength="1000" required></textarea>
+        <textarea name="description" id="description" class="form-control" rows="3" maxlength="1000" required></textarea>
+    </div>
+
+    <div class="row">
+        <div class="col-md-6 mb-3">
+            <label class="form-label">Cost (source currency)</label>
+            <input type="number" id="costInSourceCurrency" name="costInSourceCurrency"
+                   step="0.01" min="0.01" class="form-control" required />
+        </div>
+
+        <div class="col-md-6 mb-3">
+            <label class="form-label">Source currency</label>
+            <select id="sourceCurrency" name="sourceCurrency" class="form-select" required>
+                <option value="USD">USD — US Dollar</option>
+                <option value="EUR">EUR — Euro</option>
+                <option value="GBP">GBP — Pound Sterling</option>
+            </select>
+        </div>
     </div>
 
     <div class="mb-3">
-        <label class="form-label">Cost (source currency)</label>
-        <input type="number" name="costInSourceCurrency" step="0.01" min="0.01" class="form-control" required />
-    </div>
-
-    <div class="mb-3">
-        <label class="form-label">Source currency</label>
-        <select name="sourceCurrency" class="form-select" required>
-            <option value="USD">USD — US Dollar</option>
-            <option value="EUR">EUR — Euro</option>
-            <option value="GBP">GBP — Pound Sterling</option>
-        </select>
-        <small class="form-text text-muted">ZAR conversion happens automatically (Phase 6 wires the external API).</small>
+        <label class="form-label">Auto-calculated ZAR cost</label>
+        <div class="input-group">
+            <span class="input-group-text">R</span>
+            <input type="text" id="costInZarDisplay" class="form-control" readonly placeholder="0.00" />
+        </div>
+        <small id="zarHint" class="form-text text-muted">
+            Enter an amount and choose a currency — the ZAR equivalent is calculated using live exchange rates.
+        </small>
     </div>
 
     <button type="submit" class="btn btn-primary">Create request</button>
@@ -38,4 +51,55 @@
     @{
         await Html.RenderPartialAsync("_ValidationScriptsPartial");
     }
+    <script>
+        (function () {
+            const amountInput = document.getElementById('costInSourceCurrency');
+            const currencySelect = document.getElementById('sourceCurrency');
+            const zarDisplay = document.getElementById('costInZarDisplay');
+            const zarHint = document.getElementById('zarHint');
+            let debounceTimer = null;
+
+            function recalc() {
+                const amount = parseFloat(amountInput.value);
+                const currency = currencySelect.value;
+
+                if (!amount || amount <= 0 || !currency) {
+                    zarDisplay.value = '';
+                    return;
+                }
+
+                const url = `/ServiceRequests/CalculateZar?amount=${encodeURIComponent(amount)}&currency=${encodeURIComponent(currency)}`;
+
+                fetch(url)
+                    .then(r => r.json())
+                    .then(data => {
+                        if (data.success) {
+                            zarDisplay.value = data.costInZar.toFixed(2);
+                            const cacheNote = data.fromCache ? ' (cached rate)' : '';
+                            zarHint.textContent = `Rate: 1 ${currency} = R${data.rate.toFixed(4)}${cacheNote}`;
+                            zarHint.classList.remove('text-danger');
+                            zarHint.classList.add('text-muted');
+                        } else {
+                            zarDisplay.value = '';
+                            zarHint.textContent = data.error || 'Could not calculate ZAR amount.';
+                            zarHint.classList.add('text-danger');
+                            zarHint.classList.remove('text-muted');
+                        }
+                    })
+                    .catch(() => {
+                        zarDisplay.value = '';
+                        zarHint.textContent = 'Calculation failed. The server-side will still convert on submit.';
+                        zarHint.classList.add('text-danger');
+                    });
+            }
+
+            function debouncedRecalc() {
+                clearTimeout(debounceTimer);
+                debounceTimer = setTimeout(recalc, 350);
+            }
+
+            amountInput.addEventListener('input', debouncedRecalc);
+            currencySelect.addEventListener('change', recalc);
+        })();
+    </script>
 }

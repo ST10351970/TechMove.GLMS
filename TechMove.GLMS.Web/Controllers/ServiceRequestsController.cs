@@ -1,8 +1,9 @@
 ﻿using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
 using TechMove.GLMS.Core.Data;
 using TechMove.GLMS.Core.Entities;
 using TechMove.GLMS.Core.Services;
+using TechMove.GLMS.Core.Services.CurrencyExchange;
+using TechMove.GLMS.Core.Services.Strategies;
 
 namespace TechMove.GLMS.Web.Controllers;
 
@@ -10,11 +11,19 @@ public class ServiceRequestsController : Controller
 {
     private readonly ApplicationDbContext _db;
     private readonly IContractValidator _validator;
+    private readonly ICurrencyExchangeService _exchangeService;
+    private readonly CurrencyStrategyResolver _strategyResolver;
 
-    public ServiceRequestsController(ApplicationDbContext db, IContractValidator validator)
+    public ServiceRequestsController(
+        ApplicationDbContext db,
+        IContractValidator validator,
+        ICurrencyExchangeService exchangeService,
+        CurrencyStrategyResolver strategyResolver)
     {
         _db = db;
         _validator = validator;
+        _exchangeService = exchangeService;
+        _strategyResolver = strategyResolver;
     }
 
     // GET: /ServiceRequests/Create?contractId=5
@@ -41,11 +50,13 @@ public class ServiceRequestsController : Controller
         int contractId,
         string description,
         decimal costInSourceCurrency,
-        string sourceCurrency)
+        string sourceCurrency,
+        CancellationToken ct)
     {
         var contract = await _db.Contracts.FindAsync(contractId);
         if (contract is null) return NotFound();
 
+        // Contract-status check
         var canAccept = _validator.ValidateCanAcceptServiceRequests(contract);
         if (!canAccept.IsValid)
         {
@@ -53,6 +64,7 @@ public class ServiceRequestsController : Controller
             return RedirectToAction("Details", "Contracts", new { id = contractId });
         }
 
+        // Input validation
         if (string.IsNullOrWhiteSpace(description))
             ModelState.AddModelError(nameof(description), "Description is required.");
         if (costInSourceCurrency <= 0)
@@ -66,21 +78,62 @@ public class ServiceRequestsController : Controller
             return View();
         }
 
+        //Strategy pattern + external API integration
+        var rateResult = await _exchangeService.GetRateToZarAsync(sourceCurrency, ct);
+        if (!rateResult.Success)
+        {
+            ModelState.AddModelError(string.Empty,
+                $"Could not retrieve exchange rate: {rateResult.ErrorMessage}");
+            ViewBag.ContractId = contractId;
+            return View();
+        }
+
+        var strategy = _strategyResolver.Resolve(sourceCurrency);
+        var costInZar = strategy.ConvertToZAR(costInSourceCurrency, rateResult.Rate);
+
         var serviceRequest = new ServiceRequest
         {
             ContractId = contractId,
             Description = description,
             CostInSourceCurrency = costInSourceCurrency,
             SourceCurrency = sourceCurrency.ToUpperInvariant(),
-            CostInZAR = 0m,
-            ExchangeRateUsed = 0m,
+            CostInZAR = costInZar,
+            ExchangeRateUsed = rateResult.Rate,
             Status = "Pending"
         };
 
         _db.ServiceRequests.Add(serviceRequest);
-        await _db.SaveChangesAsync();
+        await _db.SaveChangesAsync(ct);
 
-        TempData["Success"] = $"Service request #{serviceRequest.Id} created.";
+        var note = rateResult.FromCache ? " (using cached rate)" : "";
+        TempData["Success"] =
+            $"Service request #{serviceRequest.Id} created. {costInSourceCurrency} {sourceCurrency.ToUpperInvariant()} = R{costInZar:N2}{note}.";
+
         return RedirectToAction("Details", "Contracts", new { id = contractId });
+    }
+
+    // GET: /ServiceRequests/CalculateZar?amount=100&currency=USD
+    // AJAX endpoint for live calculation
+    [HttpGet]
+    public async Task<IActionResult> CalculateZar(decimal amount, string currency, CancellationToken ct)
+    {
+        if (amount <= 0 || string.IsNullOrWhiteSpace(currency))
+            return Json(new { success = false, error = "Amount and currency are required." });
+
+        var rateResult = await _exchangeService.GetRateToZarAsync(currency, ct);
+        if (!rateResult.Success)
+            return Json(new { success = false, error = rateResult.ErrorMessage });
+
+        var strategy = _strategyResolver.Resolve(currency);
+        var costInZar = strategy.ConvertToZAR(amount, rateResult.Rate);
+
+        return Json(new
+        {
+            success = true,
+            costInZar,
+            rate = rateResult.Rate,
+            fromCache = rateResult.FromCache,
+            formatted = $"R{costInZar:N2}"
+        });
     }
 }

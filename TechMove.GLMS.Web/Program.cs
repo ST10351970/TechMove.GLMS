@@ -4,6 +4,7 @@ using TechMove.GLMS.Core.Services.Strategies;
 using TechMove.GLMS.Core.Services.Factories;
 using TechMove.GLMS.Core.Services.Observers;
 using TechMove.GLMS.Core.Services;
+using TechMove.GLMS.Core.Services.CurrencyExchange;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -35,6 +36,23 @@ builder.Services.AddScoped<IFileService>(sp =>
     var env = sp.GetRequiredService<IWebHostEnvironment>();
     return new FileService(env.WebRootPath);
 });
+
+//External Currency API integration
+builder.Services.AddMemoryCache();
+builder.Services.AddHttpClient(CurrencyExchangeService.HttpClientName, client =>
+{
+    client.BaseAddress = new Uri("https://open.er-api.com/");
+    client.Timeout = TimeSpan.FromSeconds(10);
+    client.DefaultRequestHeaders.Add("Accept", "application/json");
+    client.DefaultRequestHeaders.Add("User-Agent", "TechMove.GLMS/1.0");
+});
+// Disk-backed fallback so the cached rate survives app restart
+builder.Services.AddSingleton<IFallbackRateStore>(sp =>
+{
+    var env = sp.GetRequiredService<IWebHostEnvironment>();
+    return new FileFallbackRateStore(env.ContentRootPath);
+});
+builder.Services.AddScoped<ICurrencyExchangeService, CurrencyExchangeService>();
 
 // Add services to the container.
 builder.Services.AddControllersWithViews();
