@@ -1,11 +1,28 @@
 using Microsoft.EntityFrameworkCore;
 using TechMove.GLMS.Core.Data;
+using TechMove.GLMS.Core.Services.Strategies;
+using TechMove.GLMS.Core.Services.Factories;
+using TechMove.GLMS.Core.Services.Observers;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// Register the EF Core DbContext using the LocalDB connection string
+//EF Core DbContext
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
     options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
+
+//Strategy Pattern: registration for currency conversion strategies
+builder.Services.AddScoped<ICurrencyStrategy, UsdToZarStrategy>();
+builder.Services.AddScoped<ICurrencyStrategy, EurToZarStrategy>();
+builder.Services.AddScoped<ICurrencyStrategy, GbpToZarStrategy>();
+builder.Services.AddScoped<CurrencyStrategyResolver>();
+
+//Factory Pattern: Contract creation with service level defaults
+builder.Services.AddScoped<IContractFactory, ContractFactory>();
+
+//Observer Pattern: status change notifications
+builder.Services.AddSingleton<IContractObserver, AuditLogObserver>();
+builder.Services.AddSingleton<IContractObserver, ExpiredContractGuardObserver>();
+builder.Services.AddSingleton<IContractSubject, ContractStatusNotifier>();
 
 // Add services to the container.
 builder.Services.AddControllersWithViews();
